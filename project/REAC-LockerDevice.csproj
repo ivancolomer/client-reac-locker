@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <RootNamespace>REAC_LockerDevice</RootNamespace>
+    <ApplicationIcon />
+    <Win32Resource />
+    <StartupObject>REAC_LockerDevice.Program</StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DotNetEnv" Version="1.2.0" />
+  </ItemGroup>
+
+</Project>
