@@ -75,7 +75,7 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
                 {
                     this.Client.Close();
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
 
                 }
@@ -83,7 +83,7 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
                 {
                     this.Client.Dispose();
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
 
                 }
@@ -182,7 +182,7 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
 
                     }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     Logger.WriteLine(e.ToString(), Logger.LOG_LEVEL.ERROR);
                 }

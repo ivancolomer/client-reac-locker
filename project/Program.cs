@@ -56,10 +56,10 @@ namespace REAC_LockerDevice
             while(true)
             {
                 Client = new AsynchronousClient(IPAddressServer);
-
+                Thread.Sleep(500);
                 while (!Client.hasClosed)
                 {
-                    Thread.Sleep(1000);
+                    Thread.Sleep(500);
                 }
             }
             

@@ -13,20 +13,10 @@ namespace REAC_LockerDevice.Utils.Network.Udp
     {
         public bool stopListeningToBroadcast;
         private UdpClient udpClient;
-        //private IPEndPoint broadcastAddress;
 
         public BroadcastReceiver()
         {
             stopListeningToBroadcast = false;
-
-            /*broadcastAddress = new IPEndPoint(IPAddress.Any, DotNetEnv.Env.GetInt("UDP_LISTENER_PORT"));
-            udpClient = new UdpClient();
-            udpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            udpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, true);
-            udpClient.ExclusiveAddressUse = false; // only if you want to send/receive on same machine.
-            udpClient.Client.Bind(broadcastAddress);
-
-            udpClient.BeginReceive(new AsyncCallback(ReceiveCallback), null);*/
 
             udpClient = new UdpClient(DotNetEnv.Env.GetInt("UDP_LISTENER_PORT"));
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -56,7 +46,6 @@ namespace REAC_LockerDevice.Utils.Network.Udp
 
                     }
                 }
-                //Logger.WriteLineWithHeader($"Received from {ipReceiver}: {receiveString}", "BROADCAST", Logger.LOG_LEVEL.DEBUG);
 
                 if (!stopListeningToBroadcast)
                 {
