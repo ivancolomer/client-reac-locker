@@ -6,6 +6,8 @@ using System.Text;
 using System.Runtime.InteropServices;
 using REAC_LockerDevice.Utils.Output;
 using System.Diagnostics;
+using System.IO;
+using REAC_LockerDevice.Utils.ExternalPrograms;
 
 namespace REAC_LockerDevice.Utils.Network.Tcp
 {
@@ -15,21 +17,13 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
 
         private Socket Client;
         private byte[] Buffer;
-
-        private readonly object processLock;
-
         public bool hasClosed = false;
-
-        private string bashCommandArguments = "";
-
-        private Process piCameraProcess = null;
 
         public AsynchronousClient(IPAddress ipAddress)
         {
             this.Buffer = new byte[BUFFER_LENGTH];
-            this.processLock = new object();
 
-            bashCommandArguments = "-n -vf -hf -ih -w 320 -h 240 -fps 24 -t 0 -o udp://" + ipAddress.ToString() + ":" + DotNetEnv.Env.GetInt("UDP_VIDEO_STREAM_PORT");
+            ProcessManager.SetIpAddress(ipAddress.ToString(), DotNetEnv.Env.GetInt("UDP_VIDEO_STREAM_PORT"));
 
             IPEndPoint remoteEP = new IPEndPoint(ipAddress, DotNetEnv.Env.GetInt("TCP_LOCKER_LISTENER_PORT"));
             this.Client = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -66,7 +60,7 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
             }
         }
 
-        private void CloseSocket()
+        public void CloseSocket()
         {
             if (!hasClosed)
             {
@@ -118,6 +112,11 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
                         Logger.WriteLine("STOP VIDEO STREAM PROCESS", Logger.LOG_LEVEL.DEBUG);
                         StopProcess();
                     }
+                    else if(receiveString.StartsWith("open_door"))
+                    {
+                        //send to locker process a line string "open"
+                        ProcessManager.WriteLineToStandardInput(ProcessManager.PROCESS.LOCKING_DEVICE, "open");
+                    }
                 }
                 catch (Exception)
                 {
@@ -140,55 +139,25 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
 
         private void StartProcess()
         {
-            lock(processLock)
+            try
             {
-                try
-                {
-                    if (piCameraProcess == null || piCameraProcess.HasExited)
-                    {
-                        piCameraProcess = new Process()
-                        {
-                            StartInfo = new ProcessStartInfo
-                            {
-                                FileName = "raspivid",
-                                Arguments = bashCommandArguments,
-                                RedirectStandardOutput = false,
-                                UseShellExecute = false,
-                                CreateNoWindow = true,
-                            }
-                        };
-                        piCameraProcess.Start();
-                    }
-                }
-                catch (Exception e)
-                {
-                    Logger.WriteLine(e.ToString(), Logger.LOG_LEVEL.ERROR);
-                }
+                ProcessManager.StartProcess(ProcessManager.PROCESS.VIDEO_STREAMING);
             }
-            
+            catch (Exception e)
+            {
+                Logger.WriteLine(e.ToString(), Logger.LOG_LEVEL.ERROR);
+            }
         }
 
         private void StopProcess()
         {
-            lock (processLock)
+            try
             {
-                try
-                {
-                    if (piCameraProcess != null)
-                    {
-
-                        piCameraProcess.Close();
-                        piCameraProcess.Kill();
-
-                    }
-                }
-                catch (Exception e)
-                {
-                    Logger.WriteLine(e.ToString(), Logger.LOG_LEVEL.ERROR);
-                }
-
-                piCameraProcess = null;
-                
+                ProcessManager.StopProcess(ProcessManager.PROCESS.VIDEO_STREAMING);
+            }
+            catch (Exception e)
+            {
+                Logger.WriteLine(e.ToString(), Logger.LOG_LEVEL.ERROR);
             }
         }
 

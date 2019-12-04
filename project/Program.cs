@@ -7,6 +7,7 @@ using REAC_LockerDevice.Utils.Output;
 using REAC_LockerDevice.Utils.Network;
 using REAC_LockerDevice.Utils.Network.Udp;
 using REAC_LockerDevice.Utils.Network.Tcp;
+using REAC_LockerDevice.Utils.ExternalPrograms;
 
 namespace REAC_LockerDevice
 {
@@ -15,7 +16,6 @@ namespace REAC_LockerDevice
     //sudo chmod 755 ./REAC_LockerDevice
 
     //dotnet publish --self-contained --runtime linux-arm
-
 
     public class Program
     {
@@ -32,6 +32,7 @@ namespace REAC_LockerDevice
 
             DotNetEnv.Env.Load(AppDomain.CurrentDomain.BaseDirectory + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".env");
             Logger.Initialize();
+            ProcessManager.Initialize();
 
             Console.CancelKeyPress += delegate
             {
@@ -43,17 +44,18 @@ namespace REAC_LockerDevice
                 ExitProgram();
             };
 
-            BroadcastReceiver broadcastReceiver = new BroadcastReceiver(); //FOR TESTING ONLY
-
-            while(IPAddressServer == null)
+            BroadcastReceiver broadcastReceiver = new BroadcastReceiver();
+            Logger.WriteLine("Waiting to get the IP Addres of the server...", Logger.LOG_LEVEL.DEBUG);
+            while (IPAddressServer == null)
             {
-                Logger.WriteLine("Waiting to get the IP Addres of the server...", Logger.LOG_LEVEL.DEBUG);
                 Thread.Sleep(500);
             }
 
             Logger.WriteLine("IP Address found: " + IPAddressServer.ToString(), Logger.LOG_LEVEL.DEBUG);
 
-            while(true)
+            ProcessManager.StartProcess(ProcessManager.PROCESS.LOCKING_DEVICE);
+
+            while (true)
             {
                 Client = new AsynchronousClient(IPAddressServer);
                 Thread.Sleep(500);
@@ -73,6 +75,7 @@ namespace REAC_LockerDevice
             HasExited = true;
 
             CloseSocket();
+            ProcessManager.StopAllProcesses();
 
             Logger.WriteLine("Stopped. Good bye!", Logger.LOG_LEVEL.DEBUG);
             Environment.Exit(0);
@@ -80,9 +83,10 @@ namespace REAC_LockerDevice
 
         private static void CloseSocket()
         {
+
             try
             {
-                //something
+                Client.CloseSocket();
             }
             catch (Exception e)
             {
