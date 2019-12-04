@@ -7,7 +7,7 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
 {
     public class LockerProcess : GenericProcess
     {
-        public const string PATH_TO_LOCKER_PROGRAM = "";
+        public const string PATH_TO_LOCKER_PROGRAM = "/home/reac/Project/cmake-build-debug-raspberrypi/Project";
         public LockerProcess()
             :base(PATH_TO_LOCKER_PROGRAM, true, true)
         {

@@ -115,7 +115,15 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
                     else if(receiveString.StartsWith("open_door"))
                     {
                         //send to locker process a line string "open"
-                        ProcessManager.WriteLineToStandardInput(ProcessManager.PROCESS.LOCKING_DEVICE, "open");
+                        if (ProcessManager.WriteLineToStandardInput(ProcessManager.PROCESS.LOCKING_DEVICE, "open")) 
+                        {
+                            Logger.WriteLine("'open' String has been sent to locker device", Logger.LOG_LEVEL.DEBUG);
+                        }
+                        else
+                        {
+                            Logger.WriteLine("'open' String couldn't been send been sent to locker device", Logger.LOG_LEVEL.DEBUG);
+                        }
+
                     }
                 }
                 catch (Exception)

@@ -87,6 +87,22 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
             }
 
             Logger.WriteLine("InputQueueChecker exited", Logger.LOG_LEVEL.DEBUG);
+            try
+            {
+                Process.StandardInput.Close();
+            }
+            catch (Exception)
+            {
+
+            }
+            try
+            {
+                Process.StandardInput.Dispose();
+            }
+            catch (Exception)
+            {
+
+            }
         }
 
         private async void OutputQueueChecker()
@@ -106,6 +122,22 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
                 }
             }
             Logger.WriteLine("OutputQueueChecker exited", Logger.LOG_LEVEL.DEBUG);
+            try
+            {
+                Process.StandardOutput.Close();
+            }
+            catch (Exception)
+            {
+
+            }
+            try
+            {
+                Process.StandardOutput.Dispose();
+            }
+            catch (Exception)
+            {
+
+            }
         }
 
         private void ProcessChecker()
@@ -121,13 +153,23 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
             }
 
             hasExited = true;
+            SendLine(null);
+            try
+            {
+                Process.StandardOutput.Close();
+            } 
+            catch(Exception)
+            {
+
+            }
             Logger.WriteLine("ProcessChecker exited", Logger.LOG_LEVEL.DEBUG);
         }
 
-        public void SendLine(string line)
+        public bool SendLine(string line)
         {
             if(InputQueue != null)
-                InputQueue.TryAdd(line);
+                return InputQueue.TryAdd(line);
+            return false;
         }
 
         public abstract void OnReceivedLine(string line);
@@ -154,8 +196,6 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
                 {
 
                 }
-
-                SendLine(null);
             }
         }
     }
