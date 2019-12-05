@@ -53,10 +53,17 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
 
         public static bool WriteLineToStandardInput(PROCESS process, string line)
         {
-            GenericProcess currentProcess = Processes[(int)process];
-            if (currentProcess != null && !currentProcess.hasExited)
+            try
             {
-                return currentProcess.SendLine(line);
+                GenericProcess currentProcess = Processes[(int)process];
+                if (currentProcess != null && !currentProcess.hasExited)
+                {
+                    return currentProcess.SendLine(line);
+                }
+            }
+            catch(Exception e)
+            {
+
             }
             return false;
         }

@@ -101,18 +101,24 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
                 {
                     //Handle Packet
                     string receiveString = Encoding.UTF8.GetString(Buffer);
+                    int separatorIndex = receiveString.IndexOf('|');
+                    if (separatorIndex == -1)
+                        return;
 
-                    if (receiveString.StartsWith("start_video_stream"))
+                    long packetId = long.Parse(receiveString.Substring(0, separatorIndex));
+                    string message = receiveString.Substring(separatorIndex + 1);
+
+                    if (message == "start_video_stream")
                     {
                         Logger.WriteLine("START VIDEO STREAM PROCESS", Logger.LOG_LEVEL.DEBUG);
                         StartProcess();
                     }
-                    else if(receiveString.StartsWith("stop_video_stream"))
+                    else if(message == "stop_video_stream")
                     {
                         Logger.WriteLine("STOP VIDEO STREAM PROCESS", Logger.LOG_LEVEL.DEBUG);
                         StopProcess();
                     }
-                    else if(receiveString.StartsWith("open_door"))
+                    else if(message == "open_door")
                     {
                         //send to locker process a line string "open"
                         if (ProcessManager.WriteLineToStandardInput(ProcessManager.PROCESS.LOCKING_DEVICE, "open")) 
@@ -186,6 +192,10 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
                 CloseSocket();
             }
             catch (ObjectDisposedException)
+            {
+
+            }
+            catch(Exception)
             {
 
             }
