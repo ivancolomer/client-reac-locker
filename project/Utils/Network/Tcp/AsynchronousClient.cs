@@ -23,7 +23,7 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
         {
             this.Buffer = new byte[BUFFER_LENGTH];
 
-            ProcessManager.SetIpAddress(ipAddress.ToString(), DotNetEnv.Env.GetInt("UDP_VIDEO_STREAM_PORT"));
+            //ProcessManager.SetIpAddress(ipAddress.ToString(), DotNetEnv.Env.GetInt("UDP_VIDEO_STREAM_PORT"));
 
             IPEndPoint remoteEP = new IPEndPoint(ipAddress, DotNetEnv.Env.GetInt("TCP_LOCKER_LISTENER_PORT"));
             this.Client = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -107,27 +107,31 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
 
                     long packetId = long.Parse(receiveString.Substring(0, separatorIndex));
                     string message = receiveString.Substring(separatorIndex + 1);
-
-                    if (message == "start_video_stream")
+                    //Logger.WriteLine(packetId + "|" + message + "...", Logger.LOG_LEVEL.DEBUG);
+                    if (message.StartsWith("start_video_stream"))
                     {
-                        Logger.WriteLine("START VIDEO STREAM PROCESS", Logger.LOG_LEVEL.DEBUG);
+                        //Logger.WriteLine("START VIDEO STREAM PROCESS", Logger.LOG_LEVEL.DEBUG);
                         StartProcess();
+                        Send(packetId + "|video_stream_started");
                     }
-                    else if(message == "stop_video_stream")
+                    else if (message.StartsWith("stop_video_stream"))
                     {
-                        Logger.WriteLine("STOP VIDEO STREAM PROCESS", Logger.LOG_LEVEL.DEBUG);
+                        //Logger.WriteLine("STOP VIDEO STREAM PROCESS", Logger.LOG_LEVEL.DEBUG);
                         StopProcess();
+                        Send(packetId + "|video_stream_stopped");
                     }
-                    else if(message == "open_door")
+                    else if(message.StartsWith("open_door"))
                     {
                         //send to locker process a line string "open"
                         if (ProcessManager.WriteLineToStandardInput(ProcessManager.PROCESS.LOCKING_DEVICE, "open")) 
                         {
                             Logger.WriteLine("'open' String has been sent to locker device", Logger.LOG_LEVEL.DEBUG);
+                            Send(packetId + "|door_opened");
                         }
                         else
                         {
                             Logger.WriteLine("'open' String couldn't been send been sent to locker device", Logger.LOG_LEVEL.DEBUG);
+                            Send(packetId + "|door_not_opened");
                         }
 
                     }
@@ -155,7 +159,7 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
         {
             try
             {
-                ProcessManager.StartProcess(ProcessManager.PROCESS.VIDEO_STREAMING);
+                ProcessManager.StartProcess(ProcessManager.PROCESS.VIDEO_STREAMING, Program.IPAddressServer.ToString(), DotNetEnv.Env.GetInt("UDP_VIDEO_STREAM_PORT"));
             }
             catch (Exception e)
             {

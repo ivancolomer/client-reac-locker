@@ -46,7 +46,7 @@ namespace REAC_LockerDevice.Utils.Output
 
         public static void WriteLineWithHeader(string text, string header, LOG_LEVEL logLevel)
         {
-            string unformattedText = "[" + DateTime.Now + "] ";
+            string unformattedText = "[" + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff") + "] ";
             string formattedText = COLOR_GREEN + unformattedText + TEXT_RESET;
 
             if (header != "")
@@ -67,7 +67,7 @@ namespace REAC_LockerDevice.Utils.Output
             {
                 try
                 {
-                    using (StreamWriter outputFile = File.AppendText("log/" + Program.InitStartUTC.ToString("yyyy-MM-dd_HH-mm-ss") + ".log"))
+                    using (StreamWriter outputFile = File.AppendText("log/locker-" + Program.InitStartUTC.ToString("yyyy-MM-dd_HH-mm-ss") + ".log"))
                     {
                         outputFile.Write(unformattedText);
                     }

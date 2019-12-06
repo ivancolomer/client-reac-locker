@@ -86,7 +86,7 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
                 }
             }
 
-            Logger.WriteLine("InputQueueChecker exited", Logger.LOG_LEVEL.DEBUG);
+            //Logger.WriteLine("InputQueueChecker exited", Logger.LOG_LEVEL.DEBUG);
             try
             {
                 Process.StandardInput.Close();
@@ -121,7 +121,7 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
                     await Task.Delay(10);
                 }
             }
-            Logger.WriteLine("OutputQueueChecker exited", Logger.LOG_LEVEL.DEBUG);
+            //Logger.WriteLine("OutputQueueChecker exited", Logger.LOG_LEVEL.DEBUG);
             try
             {
                 Process.StandardOutput.Close();

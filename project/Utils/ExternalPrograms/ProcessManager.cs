@@ -15,9 +15,6 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
         private static GenericProcess[] Processes = null;
         private static object[] Lockers = null;
 
-        private static string IPAddress = null;
-        private static int Port = 0;
-
         public static void Initialize()
         {
             Processes = new GenericProcess[((PROCESS[])Enum.GetValues(typeof(PROCESS))).Length];
@@ -26,13 +23,7 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
                 Lockers[i] = new object();
         }
 
-        public static void SetIpAddress(string ipAddress, int port)
-        {
-            IPAddress = ipAddress;
-            Port = port;
-        }
-
-        public static void StartProcess(PROCESS process)
+        public static void StartProcess(PROCESS process, string IPAddress, int Port)
         {
             lock (Lockers[(int)process])
             {
@@ -42,11 +33,11 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
 
                 if (process == PROCESS.LOCKING_DEVICE)
                 {
-                    Processes[(int)process] = new LockerProcess();
+                    Processes[(int)process] = new LockerProcess(IPAddress, Port);
                 }
                 else if (process == PROCESS.VIDEO_STREAMING && IPAddress != null && Port != 0)
                 {
-                    Processes[(int)process] = new VideoStreamerProcess(IPAddress, Port);
+                    //Processes[(int)process] = new VideoStreamerProcess(IPAddress, Port);
                 }
             }
         }
