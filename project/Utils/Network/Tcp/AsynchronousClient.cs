@@ -13,15 +13,19 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
 {
     public class AsynchronousClient
     {
-        private const int BUFFER_LENGTH = 4096;
+        private const int BUFFER_LENGTH = 1024;
 
         private Socket Client;
         private byte[] Buffer;
         public bool hasClosed = false;
+        private ManualResetEvent sendDone;
+
+        public byte[] imageToSend = null;
 
         public AsynchronousClient(IPAddress ipAddress)
         {
             this.Buffer = new byte[BUFFER_LENGTH];
+            sendDone = new ManualResetEvent(false);
 
             //ProcessManager.SetIpAddress(ipAddress.ToString(), DotNetEnv.Env.GetInt("UDP_VIDEO_STREAM_PORT"));
 
@@ -108,7 +112,22 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
                     long packetId = long.Parse(receiveString.Substring(0, separatorIndex));
                     string message = receiveString.Substring(separatorIndex + 1);
                     //Logger.WriteLine(packetId + "|" + message + "...", Logger.LOG_LEVEL.DEBUG);
-                    if (message.StartsWith("start_video_stream"))
+                    if (message.StartsWith("get_live_image"))
+                    {
+                        byte[] image = imageToSend;
+                        if (image == null)
+                        {
+                            Send(packetId + "|send_image|0|");
+                            Logger.WriteLineWithHeader(packetId + "|send_image|0|", "image", Logger.LOG_LEVEL.DEBUG);
+                        }
+                        else
+                        {
+                            Send(packetId + "|send_image|" + image.Length + "|");
+                            Logger.WriteLineWithHeader(packetId + "|send_image|" + image.Length + "|", "image", Logger.LOG_LEVEL.DEBUG);
+                            Send(image);
+                        }
+                    }
+                    else if (message.StartsWith("start_video_stream"))
                     {
                         //Logger.WriteLine("START VIDEO STREAM PROCESS", Logger.LOG_LEVEL.DEBUG);
                         StartProcess();
@@ -181,8 +200,13 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
 
         private void Send(string message)
         {
-            byte[] byteData = Encoding.UTF8.GetBytes(message);
+            Send(Encoding.UTF8.GetBytes(message));
+        }
+
+        private void Send(byte[] byteData)
+        {
             Client.BeginSend(byteData, 0, byteData.Length, 0, new AsyncCallback(SendCallback), null);
+            sendDone.WaitOne();
         }
 
         private void SendCallback(IAsyncResult ar)
@@ -190,6 +214,7 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
             try
             { 
                 int bytesSent = Client.EndSend(ar);
+                sendDone.Set();
             }
             catch (SocketException)
             {

@@ -12,13 +12,13 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
     public abstract class GenericProcess
     {
         private ProcessStartInfo StartInfo;
-        private Process Process;
+        public Process Process;
         public bool hasExited = false;
 
         private BlockingCollection<string> InputQueue;
         private BlockingCollection<string> OutputQueue;
 
-        public GenericProcess(string arguments, bool redirectStandardInput, bool redirectStandardOutput)
+        public GenericProcess(string arguments, bool redirectStandardInput, bool redirectStandardOutput, string WorkingDirectory)
         {
             this.StartInfo = new ProcessStartInfo();
             
@@ -29,7 +29,7 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
             this.StartInfo.RedirectStandardError = false;
             this.StartInfo.CreateNoWindow = false;
             this.StartInfo.UseShellExecute = false;
-            this.StartInfo.WorkingDirectory = Directory.GetCurrentDirectory();
+            this.StartInfo.WorkingDirectory = WorkingDirectory;
 
             try { Process = Process.Start(StartInfo); }
             catch(Exception e)
