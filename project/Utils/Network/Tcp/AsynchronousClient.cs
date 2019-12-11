@@ -13,7 +13,7 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
 {
     public class AsynchronousClient
     {
-        private const int BUFFER_LENGTH = 1024;
+        private const int BUFFER_LENGTH = 4096;
 
         private Socket Client;
         private byte[] Buffer;
@@ -118,7 +118,7 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
                         if (image == null)
                         {
                             Send(packetId + "|send_image|0|");
-                            Logger.WriteLineWithHeader(packetId + "|send_image|0|", "image", Logger.LOG_LEVEL.DEBUG);
+                            //Logger.WriteLineWithHeader(packetId + "|send_image|0|", "image", Logger.LOG_LEVEL.DEBUG);
                         }
                         else
                         {
@@ -203,9 +203,15 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
             Send(Encoding.UTF8.GetBytes(message));
         }
 
+        byte[] byteDataToBeSent;
+        int bytesSent = 0;
+
         private void Send(byte[] byteData)
         {
-            Client.BeginSend(byteData, 0, byteData.Length, 0, new AsyncCallback(SendCallback), null);
+            byteDataToBeSent = byteData;
+            bytesSent = 0;
+
+            Client.BeginSend(byteDataToBeSent, 0, byteDataToBeSent.Length, 0, new AsyncCallback(SendCallback), null);
             sendDone.WaitOne();
         }
 
@@ -213,8 +219,12 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
         {
             try
             { 
-                int bytesSent = Client.EndSend(ar);
-                sendDone.Set();
+                bytesSent += Client.EndSend(ar);
+
+                if (bytesSent >= byteDataToBeSent.Length)
+                    sendDone.Set();
+                else
+                    Client.BeginSend(byteDataToBeSent, bytesSent, byteDataToBeSent.Length - bytesSent, 0, new AsyncCallback(SendCallback), null);
             }
             catch (SocketException)
             {

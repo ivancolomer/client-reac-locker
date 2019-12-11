@@ -45,6 +45,7 @@ namespace REAC_LockerDevice
             };
 
             BroadcastReceiver broadcastReceiver = new BroadcastReceiver();
+            ImageReceiver imageReceiver = new ImageReceiver();
             Logger.WriteLine("Waiting to get the IP Addres of the server...", Logger.LOG_LEVEL.DEBUG);
             while (IPAddressServer == null)
             {
