@@ -54,7 +54,7 @@ namespace REAC_LockerDevice
 
             Logger.WriteLine("IP Address found: " + IPAddressServer.ToString(), Logger.LOG_LEVEL.DEBUG);
 
-            ProcessManager.StartProcess(ProcessManager.PROCESS.LOCKING_DEVICE, IPAddressServer.ToString(), DotNetEnv.Env.GetInt("UDP_VIDEO_STREAM_PORT"));
+            ProcessManager.StartProcess(ProcessManager.PROCESS.LOCKING_DEVICE);
 
             while (true)
             {

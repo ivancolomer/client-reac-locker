@@ -23,7 +23,7 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
                 Lockers[i] = new object();
         }
 
-        public static void StartProcess(PROCESS process, string IPAddress, int Port)
+        public static void StartProcess(PROCESS process)
         {
             lock (Lockers[(int)process])
             {
@@ -31,13 +31,13 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
                 if (currentProcess != null && !currentProcess.hasExited)
                     return;
 
-                if (process == PROCESS.LOCKING_DEVICE)
+                if (process == PROCESS.LOCKING_DEVICE && Program.IPAddressServer != null)
                 {
-                    Processes[(int)process] = new LockerProcess(IPAddress, Port);
+                    Processes[(int)process] = new LockerProcess(Program.IPAddressServer.ToString());
                 }
-                else if (process == PROCESS.VIDEO_STREAMING && IPAddress != null && Port != 0)
+                else if (process == PROCESS.VIDEO_STREAMING && Program.IPAddressServer != null)
                 {
-                    //Processes[(int)process] = new VideoStreamerProcess(IPAddress, Port);
+                    //Processes[(int)process] = new VideoStreamerProcess(Program.IPAddressServer.ToString());
                 }
             }
         }

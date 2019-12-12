@@ -7,11 +7,8 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
 {
     public class LockerProcess : GenericProcess
     {
-        public const string PATH_TO_LOCKER_DIR = "/home/reac/Project/cmake-build-debug-raspberrypi/";
-        public const string PATH_TO_LOCKER_PROGRAM = PATH_TO_LOCKER_DIR + "Project";
-
-        public LockerProcess(string ipAddress, int port)
-            :base(PATH_TO_LOCKER_PROGRAM + " " + ipAddress + ":" + port.ToString(), true, true, PATH_TO_LOCKER_DIR)
+        public LockerProcess(string ipAddress)
+            :base(DotNetEnv.Env.GetString("LOCKER_DIR_PATH") + DotNetEnv.Env.GetString("LOCKER_APP_NAME") + " " + ipAddress + ":" + DotNetEnv.Env.GetString("UDP_IMAGE_LISTENER_PORT"), true, true, PATH_TO_LOCKER_DIR)
         {
 
         }

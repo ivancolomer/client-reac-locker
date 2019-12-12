@@ -8,6 +8,7 @@ using REAC_LockerDevice.Utils.Output;
 using System.Diagnostics;
 using System.IO;
 using REAC_LockerDevice.Utils.ExternalPrograms;
+using System.Linq;
 
 namespace REAC_LockerDevice.Utils.Network.Tcp
 {
@@ -26,8 +27,6 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
         {
             this.Buffer = new byte[BUFFER_LENGTH];
             sendDone = new ManualResetEvent(false);
-
-            //ProcessManager.SetIpAddress(ipAddress.ToString(), DotNetEnv.Env.GetInt("UDP_VIDEO_STREAM_PORT"));
 
             IPEndPoint remoteEP = new IPEndPoint(ipAddress, DotNetEnv.Env.GetInt("TCP_LOCKER_LISTENER_PORT"));
             this.Client = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -105,27 +104,109 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
                 {
                     //Handle Packet
                     string receiveString = Encoding.UTF8.GetString(Buffer);
-                    int separatorIndex = receiveString.IndexOf('|');
-                    if (separatorIndex == -1)
+
+                    string message;
+                    string value = getStringFirstValue(receiveString, out message);
+                    if (value == null)
                         return;
 
-                    long packetId = long.Parse(receiveString.Substring(0, separatorIndex));
-                    string message = receiveString.Substring(separatorIndex + 1);
-                    //Logger.WriteLine(packetId + "|" + message + "...", Logger.LOG_LEVEL.DEBUG);
+                    long packetId = long.Parse(value);
+
                     if (message.StartsWith("get_live_image"))
                     {
                         byte[] image = imageToSend;
                         if (image == null)
                         {
-                            Send(packetId + "|send_image|0|");
-                            //Logger.WriteLineWithHeader(packetId + "|send_image|0|", "image", Logger.LOG_LEVEL.DEBUG);
+                            Send(packetId + "|error|");
+                            return;
                         }
-                        else
+                        
+                        Send(packetId + "|send_image|" + image.Length + "|");
+                        Send(image);  
+                    }
+                    else if (message.StartsWith("get_photo_list"))
+                    {
+                        value = getStringFirstValue(message, out message);
+                        if (value == null)
                         {
-                            Send(packetId + "|send_image|" + image.Length + "|");
-                            Logger.WriteLineWithHeader(packetId + "|send_image|" + image.Length + "|", "image", Logger.LOG_LEVEL.DEBUG);
-                            Send(image);
+                            Send(packetId + "|error|");
+                            return;
                         }
+                            
+
+                        value = getStringFirstValue(message, out message);
+                        if (value == null)
+                        {
+                            Send(packetId + "|error|");
+                            return;
+                        }
+
+                        //uint userId = uint.Parse(value);
+
+                        if (!Directory.Exists(DotNetEnv.Env.GetString("LOCKER_PHOTO_DIR_PATH") + value + Path.DirectorySeparatorChar))
+                        {
+                            Send(packetId + "|error|");
+                            return;
+                        }
+
+                        string[] files = Directory.GetFiles(DotNetEnv.Env.GetString("LOCKER_PHOTO_DIR_PATH") + value + Path.DirectorySeparatorChar);
+
+                        Send(packetId + "|" + String.Join("|", files.Select(Path.GetFileName).Select(word => word.Substring(word.Length - 4))) + "|");
+
+                    }
+                    else if(message.StartsWith("get_photo_user"))
+                    {
+                        value = getStringFirstValue(message, out message);
+                        if (value == null)
+                        {
+                            Send(packetId + "|error|");
+                            return;
+                        }
+
+                        string dirname = getStringFirstValue(message, out message);
+                        if (dirname == null)
+                        {
+                            Send(packetId + "|error|");
+                            return;
+                        }
+
+                        string photoId = getStringFirstValue(message, out message);
+                        if (photoId == null)
+                        {
+                            Send(packetId + "|error|");
+                            return;
+                        }
+
+                        try
+                        {
+                            byte[] image = File.ReadAllBytes(DotNetEnv.Env.GetString("LOCKER_PHOTO_DIR_PATH") + dirname + Path.DirectorySeparatorChar + photoId + ".png");
+                            Send(packetId + "|send_image|" + image.Length + "|");
+                            Send(image);
+                            return;
+                        }
+                        catch(Exception)
+                        {
+
+                        }
+                        Send(packetId + "|error|");
+                    }
+                    else if(message.StartsWith("create_user"))
+                    {
+                        value = getStringFirstValue(message, out message);
+                        if (value == null)
+                        {
+                            Send(packetId + "|error|");
+                            return;
+                        }
+
+                        uint userId = 0;
+                        if(uint.TryParse(getStringFirstValue(message, out message), out userId) && ProcessManager.WriteLineToStandardInput(ProcessManager.PROCESS.LOCKING_DEVICE, "add_" + userId)) 
+                        {
+                            Send(packetId + "|creating_user|");
+                        }
+
+                        Send(packetId + "|error|");
+                        return;
                     }
                     else if (message.StartsWith("start_video_stream"))
                     {
@@ -178,7 +259,7 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
         {
             try
             {
-                ProcessManager.StartProcess(ProcessManager.PROCESS.VIDEO_STREAMING, Program.IPAddressServer.ToString(), DotNetEnv.Env.GetInt("UDP_VIDEO_STREAM_PORT"));
+                ProcessManager.StartProcess(ProcessManager.PROCESS.VIDEO_STREAMING);
             }
             catch (Exception e)
             {
@@ -238,6 +319,19 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
             {
 
             }
+        }
+
+        public static string getStringFirstValue(string message, out string substring)
+        {
+            int separatorIndex = message.IndexOf('|');
+            if (separatorIndex == -1)
+            {
+                substring = null;
+                return null;
+            }
+
+            substring = message.Substring(separatorIndex + 1);
+            return message.Substring(0, separatorIndex);
         }
     }
 }
