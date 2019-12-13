@@ -8,7 +8,7 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
     public class LockerProcess : GenericProcess
     {
         public LockerProcess(string ipAddress)
-            :base(DotNetEnv.Env.GetString("LOCKER_DIR_PATH") + DotNetEnv.Env.GetString("LOCKER_APP_NAME") + " " + ipAddress + ":" + DotNetEnv.Env.GetString("UDP_IMAGE_LISTENER_PORT"), true, true, PATH_TO_LOCKER_DIR)
+            :base(DotNetEnv.Env.GetString("LOCKER_DIR_PATH") + DotNetEnv.Env.GetString("LOCKER_APP_NAME") + " " + ipAddress + ":" + DotNetEnv.Env.GetString("UDP_IMAGE_LISTENER_PORT"), true, true, DotNetEnv.Env.GetString("LOCKER_DIR_PATH"))
         {
 
         }
@@ -16,6 +16,21 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
         public override void OnReceivedLine(string line)
         {
             Logger.WriteLineWithHeader(line, "LOCKER_DEVICE_PROGRAM", Logger.LOG_LEVEL.DEBUG);
+
+            if(line.StartsWith("added_user|"))
+            {
+                try
+                {
+                    int separatorIndex = line.IndexOf('|');
+
+                    Program.Client.Send("door_opened_by|" + line.Substring(separatorIndex + 1) + "|");
+                }
+                catch(Exception)
+                {
+
+                }
+            }
+
             //if (line.StartsWith("image|"))
             //{
                 /*Logger.WriteLineWithHeader(line, "LOCKER_DEVICE_PROGRAM", Logger.LOG_LEVEL.DEBUG);

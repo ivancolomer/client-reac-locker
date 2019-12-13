@@ -279,7 +279,7 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
             }
         }
 
-        private void Send(string message)
+        public void Send(string message)
         {
             Send(Encoding.UTF8.GetBytes(message));
         }

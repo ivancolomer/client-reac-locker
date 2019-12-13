@@ -52,7 +52,7 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
                     return currentProcess.SendLine(line);
                 }
             }
-            catch(Exception e)
+            catch(Exception)
             {
 
             }
