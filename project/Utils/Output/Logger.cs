@@ -36,7 +36,7 @@ namespace REAC_LockerDevice.Utils.Output
             if (!Directory.Exists("log/"))
                 Directory.CreateDirectory("log/");
 
-            WriteLine("AndroidAPI has started!", LOG_LEVEL.INFO);
+            WriteLine("LockerDeviceAPI has started!", LOG_LEVEL.INFO);
         }
 
         public static void WriteLine(string text, LOG_LEVEL logLevel)
