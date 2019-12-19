@@ -16,7 +16,6 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
         public bool hasExited = false;
 
         private BlockingCollection<string> InputQueue;
-        private BlockingCollection<string> OutputQueue;
 
         public GenericProcess(string arguments, bool redirectStandardInput, bool redirectStandardOutput, string WorkingDirectory)
         {
@@ -46,8 +45,7 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
             }
 
             if (this.StartInfo.RedirectStandardOutput)
-            {
-                OutputQueue = new BlockingCollection<string>(100);
+            { 
                 Task.Run(() => OutputQueueChecker());
             }
         }
@@ -107,8 +105,6 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
 
         private async void OutputQueueChecker()
         {
-            if (OutputQueue == null)
-                return;
 
             while (!hasExited && Process != null && !Process.HasExited)
             {
