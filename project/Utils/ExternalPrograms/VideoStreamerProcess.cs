@@ -19,5 +19,10 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
         public override void OnReceivedLine(string line)
         {
         }
+
+        public override void OnReceivedErrorLine(string line)
+        {
+
+        }
     }
 }

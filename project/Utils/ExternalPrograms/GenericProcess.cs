@@ -25,7 +25,7 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
             this.StartInfo.Arguments = "-c \"" + arguments + "\"";
             this.StartInfo.RedirectStandardOutput = redirectStandardOutput;
             this.StartInfo.RedirectStandardInput = redirectStandardInput;
-            this.StartInfo.RedirectStandardError = false;
+            this.StartInfo.RedirectStandardError = true;
             this.StartInfo.CreateNoWindow = false;
             this.StartInfo.UseShellExecute = false;
             this.StartInfo.WorkingDirectory = WorkingDirectory;
@@ -48,6 +48,8 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
             { 
                 Task.Run(() => OutputQueueChecker());
             }
+
+            Task.Run(() => OutputErrorQueueChecker());
         }
 
         private async void InputQueueChecker()
@@ -136,6 +138,39 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
             }
         }
 
+        private async void OutputErrorQueueChecker()
+        {
+
+            while (!hasExited && Process != null && !Process.HasExited)
+            {
+                try
+                {
+                    OnReceivedErrorLine(Process.StandardError.ReadLine());
+                }
+                catch (Exception)
+                {
+                    await Task.Delay(10);
+                }
+            }
+            //Logger.WriteLine("OutputQueueChecker exited", Logger.LOG_LEVEL.DEBUG);
+            try
+            {
+                Process.StandardError.Close();
+            }
+            catch (Exception)
+            {
+
+            }
+            try
+            {
+                Process.StandardError.Dispose();
+            }
+            catch (Exception)
+            {
+
+            }
+        }
+
         private void ProcessChecker()
         {
             try
@@ -169,6 +204,8 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
         }
 
         public abstract void OnReceivedLine(string line);
+
+        public abstract void OnReceivedErrorLine(string line);
 
         public void Stop()
         {

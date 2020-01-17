@@ -13,6 +13,11 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
 
         }
 
+        public override void OnReceivedErrorLine(string line)
+        {
+            Logger.WriteLineWithHeader(line, "LOCKER_DEVICE_PROGRAM_ERROR", Logger.LOG_LEVEL.ERROR);
+        }
+
         public override void OnReceivedLine(string line)
         {
             Logger.WriteLineWithHeader(line, "LOCKER_DEVICE_PROGRAM", Logger.LOG_LEVEL.DEBUG);

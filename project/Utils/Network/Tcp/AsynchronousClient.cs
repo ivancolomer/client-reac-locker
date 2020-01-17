@@ -100,147 +100,7 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
                     return;
                 }
 
-                try
-                {
-                    //Handle Packet
-                    string receiveString = Encoding.UTF8.GetString(Buffer);
-
-                    string message;
-                    string value = getStringFirstValue(receiveString, out message);
-                    if (value == null)
-                        return;
-
-                    long packetId = long.Parse(value);
-
-                    if (message.StartsWith("get_live_image"))
-                    {
-                        byte[] image = imageToSend;
-                        if (image == null)
-                        {
-                            Send(packetId + "|error|");
-                            return;
-                        }
-                        
-                        Send(packetId + "|send_image|" + image.Length + "|");
-                        Send(image);  
-                    }
-                    else if (message.StartsWith("get_photo_list"))
-                    {
-                        value = getStringFirstValue(message, out message);
-                        if (value == null)
-                        {
-                            Send(packetId + "|error|");
-                            return;
-                        }
-                            
-
-                        value = getStringFirstValue(message, out message);
-                        if (value == null)
-                        {
-                            Send(packetId + "|error|");
-                            return;
-                        }
-
-                        //uint userId = uint.Parse(value);
-
-                        if (!Directory.Exists(DotNetEnv.Env.GetString("LOCKER_PHOTO_DIR_PATH") + value + Path.DirectorySeparatorChar))
-                        {
-                            Send(packetId + "|error|");
-                            return;
-                        }
-
-                        string[] files = Directory.GetFiles(DotNetEnv.Env.GetString("LOCKER_PHOTO_DIR_PATH") + value + Path.DirectorySeparatorChar);
-
-                        Send(packetId + "|" + String.Join("|", files.Select(Path.GetFileName).Select(word => word.Substring(word.Length - 4))) + "|");
-
-                    }
-                    else if(message.StartsWith("get_photo_user"))
-                    {
-                        value = getStringFirstValue(message, out message);
-                        if (value == null)
-                        {
-                            Send(packetId + "|error|");
-                            return;
-                        }
-
-                        string dirname = getStringFirstValue(message, out message);
-                        if (dirname == null)
-                        {
-                            Send(packetId + "|error|");
-                            return;
-                        }
-
-                        string photoId = getStringFirstValue(message, out message);
-                        if (photoId == null)
-                        {
-                            Send(packetId + "|error|");
-                            return;
-                        }
-
-                        try
-                        {
-                            byte[] image = File.ReadAllBytes(DotNetEnv.Env.GetString("LOCKER_PHOTO_DIR_PATH") + dirname + Path.DirectorySeparatorChar + photoId + ".png");
-                            Send(packetId + "|send_image|" + image.Length + "|");
-                            Send(image);
-                            return;
-                        }
-                        catch(Exception)
-                        {
-
-                        }
-                        Send(packetId + "|error|");
-                    }
-                    else if(message.StartsWith("create_user"))
-                    {
-                        value = getStringFirstValue(message, out message);
-                        if (value == null)
-                        {
-                            Send(packetId + "|error|");
-                            return;
-                        }
-
-                        uint userId = 0;
-                        if(uint.TryParse(getStringFirstValue(message, out message), out userId) && ProcessManager.WriteLineToStandardInput(ProcessManager.PROCESS.LOCKING_DEVICE, "add_" + userId)) 
-                        {
-                            Send(packetId + "|creating_user|");
-                        }
-
-                        Send(packetId + "|error|");
-                        return;
-                    }
-                    else if (message.StartsWith("start_video_stream"))
-                    {
-                        //Logger.WriteLine("START VIDEO STREAM PROCESS", Logger.LOG_LEVEL.DEBUG);
-                        StartProcess();
-                        Send(packetId + "|video_stream_started");
-                    }
-                    else if (message.StartsWith("stop_video_stream"))
-                    {
-                        //Logger.WriteLine("STOP VIDEO STREAM PROCESS", Logger.LOG_LEVEL.DEBUG);
-                        StopProcess();
-                        Send(packetId + "|video_stream_stopped");
-                    }
-                    else if(message.StartsWith("open_door"))
-                    {
-                        //send to locker process a line string "open"
-                        if (ProcessManager.WriteLineToStandardInput(ProcessManager.PROCESS.LOCKING_DEVICE, "open")) 
-                        {
-                            Logger.WriteLine("'open' String has been sent to locker device", Logger.LOG_LEVEL.DEBUG);
-                            Send(packetId + "|door_opened");
-                        }
-                        else
-                        {
-                            Logger.WriteLine("'open' String couldn't been send been sent to locker device", Logger.LOG_LEVEL.DEBUG);
-                            Send(packetId + "|door_not_opened");
-                        }
-
-                    }
-                }
-                catch (Exception)
-                {
-
-                }
-
+                HandlePacket();
                 this.Receive();
             }
             catch (SocketException)
@@ -252,6 +112,152 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
             }
             catch (Exception)
             {
+            }
+        }
+
+        private void HandlePacket()
+        {
+            try
+            {
+                //Handle Packet
+                string receiveString = Encoding.UTF8.GetString(Buffer);
+
+                string message;
+                string value = getStringFirstValue(receiveString, out message);
+                if (value == null)
+                    return;
+
+                long packetId = long.Parse(value);
+
+                if (message.StartsWith("get_live_image"))
+                {
+                    byte[] image = imageToSend;
+                    if (image == null)
+                    {
+                        //Logger.WriteLineWithHeader("Image = null", "LIVE_IMAGE", Logger.LOG_LEVEL.ERROR);
+                        Send(packetId + "|error|");
+                        return;
+                    }
+
+                    //Logger.WriteLineWithHeader("Image sent", "LIVE_IMAGE", Logger.LOG_LEVEL.ERROR);
+                    Send(packetId + "|send_image|" + image.Length + "|");
+                    Send(image);
+                }
+                else if (message.StartsWith("get_photo_list"))
+                {
+                    value = getStringFirstValue(message, out message);
+                    if (value == null)
+                    {
+                        Send(packetId + "|error|");
+                        return;
+                    }
+
+
+                    value = getStringFirstValue(message, out message);
+                    if (value == null)
+                    {
+                        Send(packetId + "|error|");
+                        return;
+                    }
+
+                    //uint userId = uint.Parse(value);
+
+                    if (!Directory.Exists(DotNetEnv.Env.GetString("LOCKER_PHOTO_DIR_PATH") + value + Path.DirectorySeparatorChar))
+                    {
+                        Send(packetId + "|error|");
+                        return;
+                    }
+
+                    string[] files = Directory.GetFiles(DotNetEnv.Env.GetString("LOCKER_PHOTO_DIR_PATH") + value + Path.DirectorySeparatorChar);
+
+                    Send(packetId + "|" + String.Join("|", files.Select(Path.GetFileName).Select(word => word.Substring(word.Length - 4))) + "|");
+
+                }
+                else if (message.StartsWith("get_photo_user"))
+                {
+                    value = getStringFirstValue(message, out message);
+                    if (value == null)
+                    {
+                        Send(packetId + "|error|");
+                        return;
+                    }
+
+                    string dirname = getStringFirstValue(message, out message);
+                    if (dirname == null)
+                    {
+                        Send(packetId + "|error|");
+                        return;
+                    }
+
+                    string photoId = getStringFirstValue(message, out message);
+                    if (photoId == null)
+                    {
+                        Send(packetId + "|error|");
+                        return;
+                    }
+
+                    try
+                    {
+                        byte[] image = File.ReadAllBytes(DotNetEnv.Env.GetString("LOCKER_PHOTO_DIR_PATH") + dirname + Path.DirectorySeparatorChar + photoId + ".png");
+                        Send(packetId + "|send_image|" + image.Length + "|");
+                        Send(image);
+                        return;
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                    Send(packetId + "|error|");
+                }
+                else if (message.StartsWith("create_user"))
+                {
+                    value = getStringFirstValue(message, out message);
+                    if (value == null)
+                    {
+                        Send(packetId + "|error|");
+                        return;
+                    }
+
+                    uint userId = 0;
+                    if (uint.TryParse(getStringFirstValue(message, out message), out userId) && ProcessManager.WriteLineToStandardInput(ProcessManager.PROCESS.LOCKING_DEVICE, "add_" + userId))
+                    {
+                        Send(packetId + "|creating_user|");
+                    }
+
+                    Send(packetId + "|error|");
+                    return;
+                }
+                else if (message.StartsWith("start_video_stream"))
+                {
+                    //Logger.WriteLine("START VIDEO STREAM PROCESS", Logger.LOG_LEVEL.DEBUG);
+                    StartProcess();
+                    Send(packetId + "|video_stream_started");
+                }
+                else if (message.StartsWith("stop_video_stream"))
+                {
+                    //Logger.WriteLine("STOP VIDEO STREAM PROCESS", Logger.LOG_LEVEL.DEBUG);
+                    StopProcess();
+                    Send(packetId + "|video_stream_stopped");
+                }
+                else if (message.StartsWith("open_door"))
+                {
+                    //send to locker process a line string "open"
+                    if (ProcessManager.WriteLineToStandardInput(ProcessManager.PROCESS.LOCKING_DEVICE, "open"))
+                    {
+                        Logger.WriteLine("'open' String has been sent to locker device", Logger.LOG_LEVEL.DEBUG);
+                        Send(packetId + "|door_opened");
+                    }
+                    else
+                    {
+                        Logger.WriteLine("'open' String couldn't been send been sent to locker device", Logger.LOG_LEVEL.DEBUG);
+                        Send(packetId + "|door_not_opened");
+                    }
+
+                }
+            }
+            catch (Exception)
+            {
+
             }
         }
 
