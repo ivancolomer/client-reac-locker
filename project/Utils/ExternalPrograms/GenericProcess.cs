@@ -196,7 +196,7 @@ namespace REAC_LockerDevice.Utils.ExternalPrograms
             Logger.WriteLine("ProcessChecker exited", Logger.LOG_LEVEL.DEBUG);
         }
 
-        public bool SendLine(string line)
+        public virtual bool SendLine(string line)
         {
             if(InputQueue != null)
                 return InputQueue.TryAdd(line);

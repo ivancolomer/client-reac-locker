@@ -170,7 +170,7 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
 
                     string[] files = Directory.GetFiles(DotNetEnv.Env.GetString("LOCKER_PHOTO_DIR_PATH") + value + Path.DirectorySeparatorChar);
 
-                    Send(packetId + "|" + String.Join("|", files.Select(Path.GetFileName).Select(word => word.Substring(word.Length - 4))) + "|");
+                    Send(packetId + "|" + String.Join("|", files.Select(Path.GetFileName).Select(word => word.Substring(0, word.Length - 4))) + "|");
 
                 }
                 else if (message.StartsWith("get_photo_user"))
@@ -201,11 +201,12 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
                         byte[] image = File.ReadAllBytes(DotNetEnv.Env.GetString("LOCKER_PHOTO_DIR_PATH") + dirname + Path.DirectorySeparatorChar + photoId + ".png");
                         Send(packetId + "|send_image|" + image.Length + "|");
                         Send(image);
+                        //Logger.WriteLineWithHeader("image sent", "IMAGE_FACE", Logger.LOG_LEVEL.DEBUG);
                         return;
                     }
                     catch (Exception)
                     {
-
+                        //Logger.WriteLineWithHeader(e.ToString(), "IMAGE_FACE", Logger.LOG_LEVEL.DEBUG);
                     }
                     Send(packetId + "|error|");
                 }
@@ -244,13 +245,26 @@ namespace REAC_LockerDevice.Utils.Network.Tcp
                     //send to locker process a line string "open"
                     if (ProcessManager.WriteLineToStandardInput(ProcessManager.PROCESS.LOCKING_DEVICE, "open"))
                     {
-                        Logger.WriteLine("'open' String has been sent to locker device", Logger.LOG_LEVEL.DEBUG);
                         Send(packetId + "|door_opened");
                     }
                     else
                     {
-                        Logger.WriteLine("'open' String couldn't been send been sent to locker device", Logger.LOG_LEVEL.DEBUG);
+                        //Logger.WriteLine("'open' String couldn't been send been sent to locker device", Logger.LOG_LEVEL.DEBUG);
                         Send(packetId + "|door_not_opened");
+                    }
+
+                }
+                else if (message.StartsWith("reset"))
+                {
+                    //send to locker process a line string "open"
+                    if (ProcessManager.WriteLineToStandardInput(ProcessManager.PROCESS.LOCKING_DEVICE, "deleteall"))
+                    {
+                        Send(packetId + "|wiped_all_data");
+                    }
+                    else
+                    {
+                        //Logger.WriteLine("'open' String couldn't been send been sent to locker device", Logger.LOG_LEVEL.DEBUG);
+                        Send(packetId + "|data_could_not_be_wiped");
                     }
 
                 }
